@@ -1,0 +1,31 @@
+#!python
+import sys
+import jupyter_aws as jaws
+from generic_templates.arglist import Arglist
+from generic_templates.template import fill_template
+from generic_templates.error_report import ErrorReport
+import os
+import sys
+import sys
+
+def usage(appname:str):
+    """- Shows usage information for fill-template.py"""
+    print(f"Usage: {appname} [-D <VARNAME>=<value>] <templatefile> [template-argument...]")
+    sys.exit(1)
+
+def main(args : Arglist):
+    _app = args.shift()
+    env = {}
+    args.stack_opts("D:")
+    for opt in args.opt('D', []):
+        name,value = opt.split("=")
+        env[name] = value
+    template_file = args.shift()
+    if not template_file or not os.path.isfile(template_file):
+        usage(_app)
+
+    # process the template
+    fill_template(template_file, env, args.args)
+
+if __name__ == "__main__":
+    main(Arglist(sys.argv))

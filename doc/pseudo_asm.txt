@@ -1,0 +1,69 @@
+
+
+@transform_df(
+#for @I, @DSN, @DATASET in indices(DSNAMES), DSNAMES, DATASETS
+    @DSN = Input(@DATASET),
+#endfor
+)
+def compute(**kwargs):
+    union_all = []
+    for dsn, df_dsn in kwargs.items():
+        result = process_input(dsn, df_dsn)
+        union_all.append(result)
+    final_df = reduce(unionByName, union_all)
+    return final_df
+
+
+-----------------------------------------
+
+        PUSH    R0
+        PUSH    R1
+        PUSH    R2
+        PUSH    R3
+        PUSH    R4
+
+        CONST   0
+        POP     R0          ; index
+        GET     DSNAMES
+        XCALL   'len'           
+        POP     R1          ; len
+
+        *GET     DSNAMES
+        *XCALL   'indices'      
+        POP     R2          ; indices
+
+        *GET     DSNAMES
+        POP     R3          ; DSNAMES
+
+        *GET     DATASETS
+        POP     R4          ; DATASETS
+
+LOOP0:  LABEL  
+        PUSH    R0
+        PUSH    R1
+        EVAL2   '<='
+        JMPIF   BREAK0
+
+        PUSH    R0
+        GETIDX  R2, R0  ; indices[i]
+        SET     @I
+
+        PUSH    R0
+        GETIDX  R3, R0  ; DSNAMES[i]
+        SET     @DSN
+
+        PUSH    R0
+        GETIDX  R4, R0  ; DATASETS[i]
+        SET     @DATASET
+
+        <block>
+
+        ADDI    R0, 1
+        JMP     LOOP0
+BREAK0: LABEL   
+        POP     R4
+        POP     R3
+        POP     R2
+        POP     R1
+        POP     R0
+
