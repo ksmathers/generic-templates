@@ -2,33 +2,18 @@ import sys
 import os
 from .arglist import Arglist
 
+from .template_instr import Instruction
 
-
-
-# class VMContext:
-#     def __init__(self):
-#         self.stack = []
-#         self.pc = 0
-#         self.progmem = [ Instruction('LABEL', 'main') ]
-#         self.labels = {}
-
-#     def scan_labels(self):
-#         for pc,i in enumerate(self.progmem):
-#             if i.opcode == 'LABEL':
-#                 self.labels[i.arg1] = pc
-
-#     def prog(self, instr):
-#         self.progmem.extend(instr)
-#         self.scan_labels()
+TRACE=False
 
 
 class PreprocessorVM:
     def __init__(self, env=None, argv:Arglist=None):
-        """ The preprocessor VM is a simple stack machine with no registers.  Instead all instructions 
-        run either the top of the stack or using one of the two arguments present in the instruction 
+        """ The preprocessor VM is a simple stack machine with no registers.  Instead all instructions
+        run either the top of the stack or using one of the two arguments present in the instruction
         itself.  There is also indexed memory for storing and retrieving variables (self.vars).
-         
-        There is also a jump table (self.labels) used to move the PC to the correct instruction when 
+
+        There is also a jump table (self.labels) used to move the PC to the correct instruction when
         branching.  Labels are initialized by prescanning the code for 'LABEL' instructions.
 
         Note: The '#include' preprocessor instruction is currently unimplemented.  Making it work would
@@ -39,13 +24,12 @@ class PreprocessorVM:
             env = {}
         self.stack = []
         self.vars = env
-        self.progmem = [ Instruction('LABEL', 'main') ]
+        self.progmem = [ Instruction.LABEL('main') ]
         self.pc = 0
         self.seg_count = 0          # generates unique labels
         self.output = []
         self.outfile = None
         self.running = False
-        self.trace = False
         self.labels = {}
         self.r = { f'R{x}': None for x in range(64) }
         self.argv = argv or Arglist()
@@ -54,7 +38,7 @@ class PreprocessorVM:
     def get_r(self, reg):
         assert(reg in self.r)
         return self.r[reg]
-    
+
     def set_r(self, reg, value):
         assert(reg in self.r)
         self.r[reg] = value
@@ -68,6 +52,9 @@ class PreprocessorVM:
     def prog(self, instr):
         """ Appends a new program to progmem and rescans the labels """
         self.progmem.extend(instr)
+        if TRACE:
+            from .template_instr import print_program
+            print_program(self.progmem)
         self.scan_labels()
 
     def gensym(self):
@@ -85,26 +72,28 @@ class PreprocessorVM:
         del self.stack[-1]
         return v
 
-    def interpolate(self, body):
+    def interpolate(self, body:str):
         """Interpolates preprocessor variables into the string given, starting with the longest strings to allow for the possibility
         of common prefixes in variable names.
 
         body :str: Body of text within which to interpolate variables
         """
         for v in sorted(self.vars, key=len, reverse=True):
-            val = self.vars[v]
-            if type(val) is str:
-                body = body.replace(v, val)
+            val = str(self.vars[v])
+            body = body.replace(v, val)
         return body
 
     def execute1(self):
         """ Executes a single instruction in the Preprocessor VM
         """
         if not self.running: return
-        
+
         pc = self.pc
         instr = self.progmem[pc]
-        #print(pc, instr, self.vars, self.stack)
+        if TRACE:
+            print(f"{pc:03d} {instr}")
+            print("  v", self.vars)
+            print("  s", self.stack)
         opcode = instr.opcode
         arg1 = instr.arg1
         arg2 = instr.arg2
@@ -116,6 +105,8 @@ class PreprocessorVM:
             self.push(self.vars.get(arg1,''))
         elif opcode == 'CONST':
             self.push(arg1)
+        elif opcode == 'DUP':
+            self.push(self.stack[-1])
         elif opcode == 'EVAL2':
             cond = arg1
             a = self.pop()
@@ -189,8 +180,6 @@ class PreprocessorVM:
             self.push(sym in self.vars)
         elif opcode == 'LABEL':
             lbl = arg1
-            if self.trace:
-                print(lbl)
         elif opcode == 'FATAL':
             msg = arg1
             print(msg, file=sys.stderr)
@@ -206,9 +195,9 @@ class PreprocessorVM:
             const = arg2
             self.set_r(reg, self.get_r(reg)+const)
         elif opcode == 'GETIDX':
-            var = arg1
-            reg = arg2
-            self.push(self.vars[var][self.get_r(reg)])
+            arrreg = arg1
+            idxreg = arg2
+            self.push(self.get_r(arrreg)[self.get_r(idxreg)])
 
     def execute(self):
         """ Executes the preprocessor program that was built from parsing a template file

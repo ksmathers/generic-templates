@@ -1,6 +1,6 @@
 import re
 from .secret import Secret
-from foundrysmith.error_report import ErrorReport
+from .error_report import ErrorReport
 
 def replace_variable(body, span, varvalue):
     """- Global string replacement in the body of a document
@@ -73,7 +73,7 @@ def find_replace_variables(body : str) -> str:
        - env: fetches an environment variable
        - setting.sh: fetches a shell variable from 'setting.sh' in local directory
 
-    The <varname> part must match the name of a secret in the current runtime 
+    The <varname> part must match the name of a secret in the current runtime
     environment.
 
     Args:

@@ -1,5 +1,5 @@
 from typing import Union, List
-from io import IOBase
+from io import IOBase, StringIO
 
 class Fpos:
     """Windowed view of an input stream"""
@@ -21,6 +21,11 @@ class Fpos:
         self.cpos = 0
         self.rpos = 0
 
+    @classmethod
+    def from_string(cls, string):
+        ios = StringIO(string)
+        return Fpos(ios)
+
     @property
     def v(self):
         """- Returns the current row and column view of the stream"""
@@ -30,6 +35,7 @@ class Fpos:
     @property
     def eof(self):
         """- Returns true if the row is past the end of the stream"""
+        #print("eof", self.rpos, len(self.lines))
         if self.rpos >= len(self.lines):
             return True
         return False

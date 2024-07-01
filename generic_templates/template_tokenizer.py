@@ -1,12 +1,6 @@
 from lark.lexer import Lexer, Token
 import re
-
-g_symbolcount = 0
-def gensym(prefix="sym"):
-    """Generate a unique symbol"""
-    global g_symbolcount
-    g_symbolcount += 1
-    return f"{prefix}{g_symbolcount}"
+TRACE=False
 
 class PreprocessorLexer(Lexer):
     """Tokenizes an input file returning TEXT tokens for unrecognized text, and preprocessor
@@ -17,6 +11,7 @@ class PreprocessorLexer(Lexer):
         ("TEMPLATE", r"^#[ ]*template\b"),
         ("DEFINE", r"^#[ ]*define\b"),
         ("IFDEF", r"^#[ ]*ifdef\b"),
+        ("IFNDEF", r"^#[ ]*ifndef\b"),
         ("IF", r"^#[ ]*if\b"),
         ("ELSE", r"^#[ ]*else\b"),
         ("ENDIF", r"^#[ ]*endif\b"),
@@ -54,7 +49,10 @@ class PreprocessorLexer(Lexer):
 
     def next_token(self, fp):
         """- Fetch the next token"""
-        if fp.eof: return None
+        global TRACE
+        if fp.eof:
+            if TRACE: print("+EOF+")
+            return None
         if fp.cpos == 0:
             for r,pat in self.rules0:
                 m = re.match(pat, fp.v)
@@ -62,14 +60,14 @@ class PreprocessorLexer(Lexer):
                 if m:
                     token = Token(r, m.group(0), 0, fp.rpos, fp.cpos)
                     fp.skip(len(token.value))
-                    #print(f"{token.type:16s} {token.value}")
+                    if TRACE: print(f"+TOKEN+ {token.type:16s} {token.value}")
                     return token
             ltext = fp.v
             if not ltext.endswith('\n'):
                 ltext += '\n'
             token = Token("TEXT", ltext, 0, fp.rpos, fp.cpos)
-            fp.skip(len(token.value))
-            #print(f"{token.type:16s} {token.value}")
+            fp.skip(len(fp.v))
+            if TRACE: print(f"+TOKEN+ {token.type:16s} {token.value}")
             return token
         else:
             for r,pat in self.rules1:
@@ -77,7 +75,7 @@ class PreprocessorLexer(Lexer):
                 if m:
                     token = Token(r, m.group(0), 0, fp.rpos, fp.cpos)
                     fp.skip(len(token.value))
-                    #print(f"{token.type:16s} {token.value}")
+                    if TRACE: print(f"+TOKEN+ {token.type:16s} {token.value}")
                     return token
             raise TypeError(f"Invalid token at {fp.v}")
 

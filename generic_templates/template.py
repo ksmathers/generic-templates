@@ -1,6 +1,7 @@
 from typing import Optional, Dict, List
 
 from .fpos import Fpos
+from .template_instr import print_program
 from .template_vm import PreprocessorVM
 from .template_parser import compile
 from .template_secrets import find_replace_variables
@@ -15,7 +16,8 @@ def preprocess(fp : Fpos, environ : dict={}, args : List[str]=[]) -> Preprocesso
     """
     # Generate preprocessor script from input and execute the script in a VM
     vm = PreprocessorVM(environ, args)
-    vm.prog(compile(fp))
+    prog = compile(fp)
+    vm.prog(prog)
     vm.execute()
     return vm
 
@@ -30,7 +32,7 @@ def fill_template(
     template_file :str: Path to the template file
     env :Dict[str,str]: Environment variables can be used in place of #define statements
     *argv :List[str]: Argument list
-    errors :ErrorReport: 
+    errors :ErrorReport:
     fp :Fpos: Optional open rewindable file input buffer with row and column position tracking
     Returns :str: The result of processing the template on success.  Throws an exception on error.
     """
@@ -47,7 +49,7 @@ def fill_template(
     vm = preprocess(fp, env, argv)
     body = find_replace_variables("".join(vm.output))
     errors.exit_on_error()
-    
+
     # write output
     savepath = None
     if vm.outfile:
