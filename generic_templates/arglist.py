@@ -15,9 +15,10 @@ class Arglist:
 
         args :Alternative[List[str],List[List[str]]]: Construct from either an array or an argument list
         """
-        if len(args) == 1 and type(args) is list:
+        if len(args) == 1 and type(args[0]) is list:
             args = args[0]
-        if args is None: 
+        if len(args) == 0: 
+            self.program = sys.argv[0]
             args = copy(sys.argv[1:]) # skip executable 
         self.opts = {}
         self.args = args
