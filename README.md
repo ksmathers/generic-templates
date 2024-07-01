@@ -151,6 +151,9 @@ anyitem: body
     | include
     | define
     | instruction
+    | foreach
+
+foreach: FOREACH arglist IN exprlist block ENDFOREACH
 
 ?include: INCLUDE STRING -> include
 
@@ -160,6 +163,9 @@ define: DEFINE SYMBOL expr? -> setsymbol
 arglist: SYMBOL
     | arglist COMMA SYMBOL
 
+exprlist: expr -> exprlist
+    | exprlist COMMA expr -> exprlist
+
 instruction: HALT -> halt
     | OUTFILE expr -> outfile
 
@@ -167,6 +173,7 @@ condbody: IF bexpr block ENDIF -> condbody
     | IF bexpr block ELSE block ENDIF -> condbody
     | IFDEF SYMBOL block ENDIF -> condbody2
     | IFDEF SYMBOL block ELSE block ENDIF -> condbody2
+    | IFNDEF SYMBOL block ENDIF -> condbody2
 
 body: TEXT+
 
@@ -183,4 +190,9 @@ expr: SYMBOL -> eval1
     | BASENAME LPAR expr RPAR -> fncall
     | DIRNAME LPAR expr RPAR -> fncall
     | INTERPOLATE LPAR expr RPAR -> fncall
+    | INDICES LPAR expr RPAR -> fncall
+
+%declare TEXT IF IFDEF IFNDEF ELSE ENDIF INCLUDE DEFINE SYMBOL ASSIGN STRING
+%declare COMP UNARY DEFINED TRUE FALSE HALT TEMPLATE OUTFILE COMMA LPAR RPAR
+%declare BASENAME DIRNAME INTERPOLATE IN FOREACH ENDFOREACH INDICES
 ```
