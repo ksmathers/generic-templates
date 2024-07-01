@@ -1,5 +1,13 @@
 # generic_templates
-Generates source files from templated source 
+Generates source files from templated source.  This tool is language agnostic.  You can use it as a preprocessor for python
+code as easily as you can for XML, Yaml, JSON, or Java.  From the perspective of the preprocessor there are two types of 
+information in a template, preprocessor instructions and anything else.  The anything else part gets copied to the output 
+without change except that symbols that you define using the preprocessor instructions get interpolated into the output.
+
+The generic template processor doesn't know anything about what your language considers to be a string, nor does it have 
+any other way to avoid interpolation unless you choose preprocessor symbols that won't be confused with your targeted code.
+As a result there is no need for the token pasting operator of the standard C preprocessor.  If you want your symbol to be
+a string, just put string markers around it.
 
 # Installation
 
@@ -10,7 +18,7 @@ Generates source files from templated source
   $ keyring set aws <your-secrets>
 ```
 
-# Usage
+# Library Usage
 
 ```python
   from generic_templates import fill_template
@@ -86,6 +94,29 @@ the result so far.
     ... even more complex code ...
 ```
 
+Repeating sections of code can be processed as templates by using the '#for' and '#endfor' preprocessor instructions.  Lines of code that
+appear between those will iterate over the content repeating it as many times as there are items in an array contained within the variable
+targeted by the for loop. An example of this is shown below:
+
+```python
+    #template @NLIST, @VLIST
+    def func(
+    #for @N, @V in @NLIST, @VLIST
+        @N = @V,
+    #endfor
+    ):
+        args = [
+    #for @I, @N in indices(@NLIST), @NLIST
+             ("@N", @N, @I),
+    #endfor
+        ]
+        for n in args:
+            print(f"{n[0]:32s} {n[1]}")
+```
+There is currenly no mechanism for building lists within the preprocessor language itself, so any lists that are
+mapped to preprocessor variables must be delivered by code.  A sample invocation of the python template shown above can be seen in the
+'test/foreach-test.py' file.
+
 In the final pass after all of the preprocessor statements have been run, the 'fill-template' command will replace special symbols with 
 known secrets.  The origin of the known secrets will vary depending on the type of secret and where the 'fill-template' command is running.
 The supported secret types are:
@@ -120,6 +151,9 @@ anyitem: body
     | include
     | define
     | instruction
+    | foreach
+
+for: FOR arglist IN exprlist block ENDFOR
 
 ?include: INCLUDE STRING -> include
 
@@ -129,6 +163,9 @@ define: DEFINE SYMBOL expr? -> setsymbol
 arglist: SYMBOL
     | arglist COMMA SYMBOL
 
+exprlist: expr -> exprlist
+    | exprlist COMMA expr -> exprlist
+
 instruction: HALT -> halt
     | OUTFILE expr -> outfile
 
@@ -136,6 +173,7 @@ condbody: IF bexpr block ENDIF -> condbody
     | IF bexpr block ELSE block ENDIF -> condbody
     | IFDEF SYMBOL block ENDIF -> condbody2
     | IFDEF SYMBOL block ELSE block ENDIF -> condbody2
+    | IFNDEF SYMBOL block ENDIF -> condbody2
 
 body: TEXT+
 
@@ -152,4 +190,9 @@ expr: SYMBOL -> eval1
     | BASENAME LPAR expr RPAR -> fncall
     | DIRNAME LPAR expr RPAR -> fncall
     | INTERPOLATE LPAR expr RPAR -> fncall
+    | INDICES LPAR expr RPAR -> fncall
+
+%declare TEXT IF IFDEF IFNDEF ELSE ENDIF INCLUDE DEFINE SYMBOL ASSIGN STRING
+%declare COMP UNARY DEFINED TRUE FALSE HALT TEMPLATE OUTFILE COMMA LPAR RPAR
+%declare BASENAME DIRNAME INTERPOLATE IN FOREACH ENDFOREACH INDICES
 ```
