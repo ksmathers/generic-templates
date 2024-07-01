@@ -153,7 +153,7 @@ anyitem: body
     | instruction
     | foreach
 
-foreach: FOREACH arglist IN exprlist block ENDFOREACH
+for: FOR arglist IN exprlist block ENDFOR
 
 ?include: INCLUDE STRING -> include
 
