@@ -86,6 +86,29 @@ the result so far.
     ... even more complex code ...
 ```
 
+Repeating sections of code can be processed as templates by using the '#for' and '#endfor' preprocessor instructions.  Lines of code that
+appear between those will iterate over the content repeating it as many times as there are items in an array contained within the variable
+targeted by the for loop. An example of this is shown below:
+
+```python
+    #template @NLIST, @VLIST
+    def func(
+    #for @N, @V in @NLIST, @VLIST
+        @N = @V,
+    #endfor
+    ):
+        args = [
+    #for @I, @N in indices(@NLIST), @NLIST
+             ("@N", @N, @I),
+    #endfor
+        ]
+        for n in args:
+            print(f"{n[0]:32s} {n[1]}")
+```
+There is currenly no mechanism for building lists within the preprocessor language itself, so any lists that are
+mapped to preprocessor variables must be delivered by code.  A sample invocation of the python template shown above can be seen in the
+'test/foreach-test.py' file.
+
 In the final pass after all of the preprocessor statements have been run, the 'fill-template' command will replace special symbols with 
 known secrets.  The origin of the known secrets will vary depending on the type of secret and where the 'fill-template' command is running.
 The supported secret types are:
