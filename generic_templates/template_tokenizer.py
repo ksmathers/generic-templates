@@ -18,8 +18,8 @@ class PreprocessorLexer(Lexer):
         ("HALT", r"^#[ ]*halt\b"),
         # ("ARG", r"^#[ ]*arg\b"),
         ("OUTFILE", r"^#[ ]*outfile\b"),
-        ("FOREACH", r"^#[ ]*for\b"),
-        ("ENDFOREACH", r"^#[ ]*endfor\b")
+        ("FOR", r"^#[ ]*for\b"),
+        ("ENDFOR", r"^#[ ]*endfor\b")
     ]
 
     rules1 = [

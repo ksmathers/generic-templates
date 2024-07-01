@@ -16,9 +16,9 @@ anyitem: body
     | include
     | define
     | instruction
-    | foreach
+    | for
 
-foreach: FOREACH arglist IN exprlist block ENDFOREACH
+for: FOR arglist IN exprlist block ENDFOR -> foreach
 
 ?include: INCLUDE STRING -> include
 
@@ -59,7 +59,7 @@ expr: SYMBOL -> eval1
 
 %declare TEXT IF IFDEF IFNDEF ELSE ENDIF INCLUDE DEFINE SYMBOL ASSIGN STRING
 %declare COMP UNARY DEFINED TRUE FALSE HALT TEMPLATE OUTFILE COMMA LPAR RPAR
-%declare BASENAME DIRNAME INTERPOLATE IN FOREACH ENDFOREACH INDICES
+%declare BASENAME DIRNAME INTERPOLATE IN FOR ENDFOR INDICES
 """
 
 # Utility functions

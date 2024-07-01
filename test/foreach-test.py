@@ -16,7 +16,7 @@ def func(
 ):
     args = [
 #for @I, @N in indices(@NLIST), @NLIST
-        ("@N", @N, @I),
+        ("@N", @N),    # args[@I]
 #endfor
     ]
     for n in args:
