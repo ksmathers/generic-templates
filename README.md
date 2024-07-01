@@ -1,5 +1,13 @@
 # generic_templates
-Generates source files from templated source 
+Generates source files from templated source.  This tool is language agnostic.  You can use it as a preprocessor for python
+code as easily as you can for XML, Yaml, JSON, or Java.  From the perspective of the preprocessor there are two types of 
+information in a template, preprocessor instructions and anything else.  The anything else part gets copied to the output 
+without change except that symbols that you define using the preprocessor instructions get interpolated into the output.
+
+The generic template processor doesn't know anything about what your language considers to be a string, nor does it have 
+any other way to avoid interpolation unless you choose preprocessor symbols that won't be confused with your targeted code.
+As a result there is no need for the token pasting operator of the standard C preprocessor.  If you want your symbol to be
+a string, just put string markers around it.
 
 # Installation
 
@@ -10,7 +18,7 @@ Generates source files from templated source
   $ keyring set aws <your-secrets>
 ```
 
-# Usage
+# Library Usage
 
 ```python
   from generic_templates import fill_template
