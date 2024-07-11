@@ -1,5 +1,8 @@
 import re
-from .secret import Secret
+try:
+    from jupyter_aws.secret import Secret
+except:
+    from .secret import Secret
 from .error_report import ErrorReport
 
 def replace_variable(body, span, varvalue):

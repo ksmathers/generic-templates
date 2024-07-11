@@ -15,6 +15,7 @@ anyitem: body
     | condbody
     | include
     | define
+    | report
     | instruction
     | for
 
@@ -24,6 +25,8 @@ for: FOR arglist IN exprlist block ENDFOR -> foreach
 
 define: DEFINE SYMBOL expr? -> setsymbol
     | TEMPLATE arglist -> template
+
+report: REPORT expr
 
 arglist: SYMBOL
     | arglist COMMA SYMBOL
@@ -59,14 +62,15 @@ expr: SYMBOL -> eval1
 
 %declare TEXT IF IFDEF IFNDEF ELSE ENDIF INCLUDE DEFINE SYMBOL ASSIGN STRING
 %declare COMP UNARY DEFINED TRUE FALSE HALT TEMPLATE OUTFILE COMMA LPAR RPAR
-%declare BASENAME DIRNAME INTERPOLATE IN FOR ENDFOR INDICES
+%declare BASENAME DIRNAME INTERPOLATE IN FOR ENDFOR INDICES REPORT
 """
 
 # Utility functions
 def unwrap_str(s):
-    if s.startswith('"') and s.endswith('"'):
-        return s[1:-1]
-    return s
+    """ Removes quotes and evaluates escaped characters to produce a string from a source-code quoted string representation
+    """
+    import ast 
+    return ast.literal_eval(s)
 
 
 # Parser tree transformer to output file (as a list of lines)
@@ -92,6 +96,11 @@ class ParsePreprocessor(Transformer):
         print(rule, "dumpstack")
         for i, iv in enumerate(v):
             print(f"  {i:02d} - {iv}")
+
+    def report(self, v):
+        # REPORT expr
+        code = v[1] + [ Instruction.PRINT() ]
+        return code
 
     def foreach(self, v):
         #self.dumpstack("foreach",v)

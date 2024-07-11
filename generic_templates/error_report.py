@@ -7,7 +7,7 @@ class ErrorLevel(Enum):
     ERROR=2
 
 class ErrorReport:
-    Level = ErrorLevel
+    Level = ErrorLevel #NOSONAR
 
     def __init__(self):
         self.errors = []

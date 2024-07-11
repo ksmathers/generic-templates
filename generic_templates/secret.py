@@ -12,7 +12,7 @@ class Secret:
         if system is None:
             system = detect_runtime()
         else:
-            system = DockerRuntime(system)
+            system = DockerRuntime[system]
         self.system = system
         self.name = name
 

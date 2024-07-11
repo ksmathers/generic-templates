@@ -19,7 +19,8 @@ class PreprocessorLexer(Lexer):
         # ("ARG", r"^#[ ]*arg\b"),
         ("OUTFILE", r"^#[ ]*outfile\b"),
         ("FOR", r"^#[ ]*for\b"),
-        ("ENDFOR", r"^#[ ]*endfor\b")
+        ("ENDFOR", r"^#[ ]*endfor\b"),
+        ("REPORT", r"^#[ ]*report\b")
     ]
 
     rules1 = [
@@ -39,7 +40,8 @@ class PreprocessorLexer(Lexer):
         ("RPAR", r"\)"),
         ("COMMA", r","),
         ("SYMBOL", r"[@A-Za-z_][@A-Za-z0-9_]*"),
-        ("STRING", r'"[^"]*"'),
+        ("STRING", r'"(?:[^"\\]|\\.)*"'), # double-quoted string with escaped double quotes
+        ("STRING", r"'(?:[^'\\]|\\.)*'"), # single-quoted strign with escaped single quotes
         ("EOL", r"\n"),
     ]
 

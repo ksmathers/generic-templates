@@ -1,4 +1,5 @@
 from typing import Optional, Dict, List
+import os
 
 from .fpos import Fpos
 from .template_instr import print_program
@@ -21,12 +22,23 @@ def preprocess(fp : Fpos, environ : dict={}, args : List[str]=[]) -> Preprocesso
     vm.execute()
     return vm
 
+def fix_module_names(fpath):
+    from os.path import dirname, basename
+    mydir = str(dirname(fpath))
+    myfile = str(basename(fpath))
+    if '.' in myfile:
+        basefile, ext = myfile.rsplit(".", 1)
+        myfile = f"{basefile.replace('.', '-')}.{ext}"
+    return os.path.join(mydir, myfile)
+
 def fill_template(
         template_file :str,
         env : Dict[str, str],
         *argv,
         errors = None,
-        fp :Optional[Fpos] = None
+        fp :Optional[Fpos] = None,
+        output_dir :str = None,
+        input_dir :str = None
 ):
     """
     template_file :str: Path to the template file
@@ -38,8 +50,12 @@ def fill_template(
     """
     # read template
     #print(f"reading {template_file}")
+
+    if input_dir:
+        template_file = os.path.join(input_dir, template_file)
     if '__FILE__' not in env:
         env['__FILE__'] = template_file
+
     if not fp:
         fp = Fpos(template_file)
     if errors is None:
@@ -58,7 +74,20 @@ def fill_template(
         savepath = template_file[:-9]
 
     if savepath:
+        if output_dir:
+            if input_dir:
+                savepath = savepath.replace(input_dir, output_dir)
+            else:
+                savepath = os.path.join(output_dir, savepath)
+        savepath = fix_module_names(savepath) # removes illegal characters for python modules 
+        odir = os.path.dirname(savepath)
+        if odir and not os.path.isdir(odir):
+            print(f"creating directory {odir}")
+            os.makedirs(odir)
+        
+
         print(f"writing {savepath}")
+
         with open(savepath, "wt") as f:
             f.write(body)
     else:

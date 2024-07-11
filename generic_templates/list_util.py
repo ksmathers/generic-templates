@@ -2,7 +2,7 @@
 
 def _grep(_list, needle):
     """returns a generator that can iterate over list items that contain 'needle'"""
-    if not type(needle) is list:
+    if type(needle) is not list:
         needle = [ needle ]
     for l in _list:
         for n in needle:

@@ -10,7 +10,7 @@ class ZuluTime:
         then if the ZULUTIME environment variable exists that time will be returned.   If neither is 
         found then the current time is returned.
         """
-        if not isodate is None:
+        if isodate is not None:
             isodate = str(isodate)
             if ' ' in isodate:
                 isodate = isodate.replace(' ','T')
@@ -32,11 +32,11 @@ class ZuluTime:
                 self._datetime = pytz.utc.localize(now)
 
     @classmethod
-    def now(self):
+    def now(cls):
         """
         Returns the current time in Zulu standard
         """
-        return ZuluTime(datetime.datetime.utcnow())
+        return cls(datetime.datetime.utcnow())
 
     @staticmethod
     def isnaive(dt : datetime.datetime):

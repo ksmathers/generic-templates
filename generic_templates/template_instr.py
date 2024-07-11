@@ -1,5 +1,4 @@
 
-
 g_symbolcount = 0
 def gensym(prefix="sym"):
     """Generate a unique symbol"""
@@ -7,65 +6,67 @@ def gensym(prefix="sym"):
     g_symbolcount += 1
     return f"{prefix}{g_symbolcount}"
 
-
 class Instruction:
     def __init__(self, opcode, arg1=None, arg2=None):
         self.op = [opcode, arg1, arg2]
 
     @classmethod
-    def LABEL(cls, label):
+    def LABEL(cls, label): # NOSONAR
         return Instruction('LABEL', label)
     @classmethod
-    def PUSH(cls, reg):
+    def PUSH(cls, reg): # NOSONAR
         return Instruction('PUSH', reg)
     @classmethod
-    def POP(cls, reg):
+    def POP(cls, reg): # NOSONAR
         return Instruction('POP', reg)
     @classmethod
-    def ADD(cls, reg, const):
+    def ADD(cls, reg, const): # NOSONAR
         return Instruction('ADD', reg, const)
     @classmethod
-    def JMP(cls, label):
+    def JMP(cls, label): # NOSONAR
         return Instruction('JMP', label)
     @classmethod
-    def JMPIF(cls, label):
+    def JMPIF(cls, label): # NOSONAR
         return Instruction('JMPIF', label)
     @classmethod
-    def EMIT(cls, text):
+    def EMIT(cls, text): # NOSONAR
         return Instruction('EMIT', text)
     @classmethod
-    def ARG(cls, argn, symbol):
+    def ARG(cls, argn, symbol): # NOSONAR
         return Instruction('ARG', argn, symbol)
     @classmethod
-    def CONST(cls, value):
+    def CONST(cls, value): # NOSONAR
         return Instruction('CONST', value)
     @classmethod
-    def GET(cls, symbol):
+    def GET(cls, symbol): # NOSONAR
         return Instruction('GET', symbol)
     @classmethod
-    def SET(cls, symbol):
+    def SET(cls, symbol): # NOSONAR
         return Instruction('SET', symbol)
     @classmethod
-    def XCALL(cls, func):
+    def XCALL(cls, func): # NOSONAR
         return Instruction('XCALL', func)
     @classmethod
-    def OUTFILE(cls):
+    def OUTFILE(cls): # NOSONAR
         return Instruction('OUTFILE')
     @classmethod
-    def HALT(cls):
+    def HALT(cls): # NOSONAR
         return Instruction('HALT')
     @classmethod
-    def DUP(cls):
+    def DUP(cls): # NOSONAR
         return Instruction('DUP')
     @classmethod
-    def GETIDX(cls, arrreg, idxreg):
+    def GETIDX(cls, arrreg, idxreg): # NOSONAR
         return Instruction('GETIDX', arrreg, idxreg)
     @classmethod
-    def EVAL2(cls, op):
+    def EVAL2(cls, op): # NOSONAR
         return Instruction('EVAL2', op)
     @classmethod
-    def EVAL1(cls, op):
+    def EVAL1(cls, op): # NOSONAR
         return Instruction('EVAL1', op)
+    @classmethod
+    def PRINT(cls): # NOSONAR
+        return Instruction('PRINT')
 
     def __repr__(self) -> str:
         opcode = self.opcode

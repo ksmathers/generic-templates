@@ -161,6 +161,9 @@ class PreprocessorVM:
             self.outfile = os.path.join(basedir, filename)
         elif opcode == 'INCLUDE':
             raise NotImplementedError("Not implemented INCLUDE")
+        elif opcode == 'PRINT':
+            # PRINT
+            print(self.pop())
         elif opcode == 'HALT':
             self.running = False
         elif opcode == 'XCALL':
@@ -179,7 +182,7 @@ class PreprocessorVM:
             sym = arg1
             self.push(sym in self.vars)
         elif opcode == 'LABEL':
-            lbl = arg1
+            pass #NOSONAR
         elif opcode == 'FATAL':
             msg = arg1
             print(msg, file=sys.stderr)

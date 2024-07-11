@@ -37,7 +37,7 @@ class TextFinder:
         given regular expression.
         """
         npos = self.locatex(pattern)
-        if not limit is None and npos > limit:
+        if limit is not None and npos > limit:
             raise ValueError(f"pattern {pattern} not found before {limit}")
         if npos < 0:
             raise ValueError(f"pattern {pattern} not found")
@@ -99,7 +99,7 @@ class TextFinder:
         Returns the location of a regex with search starting from the current cursor position
         """
         match = re.search(find_regex, self.s[self.pos:])
-        if not match is None:
+        if match is not None:
             s,e = match.span()
             self.lneedle = self.s[self.pos+s:self.pos+e]
             #print("lneedle <=", self.lneedle)
@@ -112,7 +112,7 @@ class TextFinder:
         is represented by a regular expression
         """
         match = re.match(allowed_regex, self.s[self.pos:])
-        if not match is None:
+        if match is not None:
             #print(match)
             self.pos += match.span()[1]
         return self

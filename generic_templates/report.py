@@ -9,7 +9,7 @@ class Report():
 
     def section(self, section):
         self.current_section = section
-        if not section in self.sections:
+        if section not in self.sections:
             self.sections.append(section)
             self.sections_log[section] = []
 
@@ -35,7 +35,7 @@ class Report():
         self.pending_subhead = header
 
     def print(self, *data):
-        if not self.pending_subhead is None:
+        if self.pending_subhead is not None:
             self.log_text("")
             self.log_text("  \u2022 " + self.pending_subhead)
             self.pending_subhead = None
