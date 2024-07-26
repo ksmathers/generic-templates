@@ -1,8 +1,10 @@
 import sys
 import os
+from copy import copy
 from .arglist import Arglist
 
 from .template_instr import Instruction
+
 
 TRACE=False
 
@@ -15,10 +17,6 @@ class PreprocessorVM:
 
         There is also a jump table (self.labels) used to move the PC to the correct instruction when
         branching.  Labels are initialized by prescanning the code for 'LABEL' instructions.
-
-        Note: The '#include' preprocessor instruction is currently unimplemented.  Making it work would
-        require pushing the current context, parsing the imported file into a new program, then executing
-        the new program until it exits before restoring the current context.
         """
         if env is None:
             env = {}
@@ -82,7 +80,7 @@ class PreprocessorVM:
             val = str(self.vars[v])
             body = body.replace(v, val)
         return body
-
+    
     def execute1(self):
         """ Executes a single instruction in the Preprocessor VM
         """
@@ -160,7 +158,29 @@ class PreprocessorVM:
             assert(not filename.startswith("/"))
             self.outfile = os.path.join(basedir, filename)
         elif opcode == 'INCLUDE':
-            raise NotImplementedError("Not implemented INCLUDE")
+            from .template import preprocess, Fpos
+
+            # load the template argument list
+            argc = arg1
+            argv = []
+            for _i in range(argc):
+                argv.append(self.pop())
+            argv = list(reversed(argv))
+
+            # get the filename of the template to include
+            template_path = self.get_r("R0")
+            fp = Fpos(template_path)
+
+            # run the preprocessor on the included template
+            newvars = copy(self.vars)
+            newvars['__FILE__'] = template_path
+            vm = preprocess(fp, newvars, argv)
+
+            # add the output of the preprocessor to the current context
+            for k,v in vm.vars.items():
+                if k != '__FILE__':
+                    self.vars[k] = v
+            self.output.extend(vm.output)
         elif opcode == 'PRINT':
             # PRINT
             print(self.pop())

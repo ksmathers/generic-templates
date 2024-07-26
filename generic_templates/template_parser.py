@@ -21,7 +21,7 @@ anyitem: body
 
 for: FOR arglist IN exprlist block ENDFOR -> foreach
 
-?include: INCLUDE STRING -> include
+include: INCLUDE exprlist -> include
 
 define: DEFINE SYMBOL expr? -> setsymbol
     | TEMPLATE arglist -> template
@@ -173,15 +173,7 @@ class ParsePreprocessor(Transformer):
     def template(self, v):
         # TEMPLATE arglist
         self.log("template", v)
-        result = [
-            Instruction.EMIT("""
-#
-# WARNING: This file was created automatically from the template located in:
-#   __FILE__
-# Any changes made here will be lost the next time the template is processed.
-# Please update the template file to make durable changes.
-#
-""")]
+        result = []
         for i, _v in enumerate(v[1]):
             result.append(Instruction.ARG(i, _v))
         return result
@@ -210,6 +202,24 @@ class ParsePreprocessor(Transformer):
         # halt
         self.log("halt", v)
         return [ Instruction.HALT() ]
+    
+    def include(self, v):
+        # include exprlist
+        self.log("include", v)
+        exprlist = v[1]
+        code = [
+            Instruction.PUSH("R0")
+        ] + exprlist[0] + [
+            Instruction.POP("R0")       # template name to include in R0
+        ]
+        argc = len(exprlist)-1
+        for i in range(argc):
+            code += exprlist[i+1]       # run the n-th expr
+        code += [
+            Instruction.INCLUDE(len(exprlist)-1),
+            Instruction.POP("R0")
+        ]
+        return code
 
     def outfile(self, n):
         # outfile string

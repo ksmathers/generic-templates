@@ -6,7 +6,7 @@ if sys.version_info < (3, 0):
 
 setup(
     name = "generic-templates",
-    version = "0.4.1",
+    version = "0.4.2",
     author = "Kevin Smathers",
     author_email = "kevin@ank.com",
     description = ("Python library for preprocessor expansion of template files to configured source code"),

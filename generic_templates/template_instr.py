@@ -50,6 +50,9 @@ class Instruction:
     def OUTFILE(cls): # NOSONAR
         return Instruction('OUTFILE')
     @classmethod
+    def INCLUDE(cls, argc): # NOSONAR
+        return Instruction('INCLUDE', argc)
+    @classmethod
     def HALT(cls): # NOSONAR
         return Instruction('HALT')
     @classmethod

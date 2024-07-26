@@ -31,6 +31,31 @@ def fix_module_names(fpath):
         myfile = f"{basefile.replace('.', '-')}.{ext}"
     return os.path.join(mydir, myfile)
 
+def warning(templatepath, savepath):
+    fname = os.path.basename(savepath)
+    warning = """
+#
+# WARNING: This file was created automatically from the template located in:
+#   __FILE__
+# Any changes made here will be lost the next time the template is processed.
+# Please update the template file to make durable changes.
+#
+"""
+    ext=fname
+    if '.' in fname:
+        ext = fname.rsplit(".")[1]
+    if ext in [ "py", "sh", "json", "Dockerfile", "yaml"]:
+        cmt = "#"
+    elif ext in [ "c", "cpp", "C", "java"]:
+        cmt = "//"
+    elif ext in [ "puml", "plantuml"]:
+        cmt = "'"
+
+    common_path = os.path.commonpath([templatepath, savepath])+"/"
+
+    return warning.replace("#", cmt).replace("__FILE__", templatepath.replace(common_path,""))
+
+
 def fill_template(
         template_file :str,
         env : Dict[str, str],
@@ -58,6 +83,7 @@ def fill_template(
 
     if not fp:
         fp = Fpos(template_file)
+
     if errors is None:
         errors = ErrorReport()
 
@@ -89,6 +115,7 @@ def fill_template(
         print(f"writing {savepath}")
 
         with open(savepath, "wt") as f:
+            f.write(warning(template_file, savepath))
             f.write(body)
     else:
         print(body)
