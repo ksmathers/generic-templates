@@ -2,9 +2,9 @@ from typing import Union, List
 from io import IOBase, StringIO
 
 class Fpos:
-    """Windowed view of an input stream"""
+    """Indexed view of an input file by row and column"""
     def __init__(self, data : Union[str, IOBase, List[str]]):
-        """ - Provides a windowed view of an input stream.  Each line is assumed to be terminated by a newline.
+        """ - Provides a view of an input file.  Rows are split by a newline.
         Args:
         data :Union[str, IOBase, List[str]]: A file path or derivative class of IOBase to read from, or a list of lines
         """
@@ -28,13 +28,13 @@ class Fpos:
 
     @property
     def v(self):
-        """- Returns the current row and column view of the stream"""
+        """- Returns the view at the current row and column"""
         #print(self.rpos,self.cpos,self.lines[self.rpos][self.cpos:])
         return self.lines[self.rpos][self.cpos:]
 
     @property
     def eof(self):
-        """- Returns true if the row is past the end of the stream"""
+        """- Returns true if the current row is past the end of the file"""
         #print("eof", self.rpos, len(self.lines))
         if self.rpos >= len(self.lines):
             return True

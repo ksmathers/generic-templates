@@ -1,71 +1,52 @@
 import os
-from enum import Enum
-import platform
+import yaml
 
-class Runtime(Enum):
-    OTHER = -1
-    DOCKER = 1
-    KUBERNETES = 2
-    MACOS = 3
-    WINDOWS = 4
-    
-def detect_runtime():
-    uname = platform.uname()
-    if os.path.exists("/var/run/secrets/kubernetes.io") or "KUBERNETES_SERVICE_HOST" in os.environ:
-        runtime = Runtime.KUBERNETES
-    elif os.path.exists("/.dockerenv"):
-        runtime = Runtime.DOCKER
-    elif uname.system == 'Darwin':
-        runtime = Runtime.MACOS
-    elif uname.system == 'Windows':
-        runtime = Runtime.WINDOWS
-    else:
-        runtime = Runtime.OTHER
-    return runtime
-
-class Network:
-    MITM_CACERT=os.path.expanduser("~/etc/CombinedCA.cer")
-
-    def __init__(self, mitm=True):
-        self.mitm = mitm
-
-    def cacert(self):
-        if self.mitm:
-            return Network.MITM_CACERT
-        else:
-            import certifi
-            return certifi.where()
+from .virtual import create_backend, create_network, create_environment
+from .backend.object import Object
+from .backend.secret import Secret
 
 
 class Context:
-    def __init__(self, backend=None, environment=None, network=None):
-        rt = detect_runtime()
-        if backend is None:
-            if rt == Runtime.KUBERNETES:
-                # ARAD Kubernetes containers run in EKS
-                from .aws.context import Context as AWSContext
-                self.backend = AWSContext()
-            
-            if rt == Runtime.DOCKER:
-                self.backend = TinyServerContext()
+    def __init__(self, service="default", config=None):
+        """
+        Reads service descriptions from a $HOME/.jaws and instantiates one of the services 
 
-            if rt == Runtime.MACOS or rt == Runtime.WINDOWS:
-                self.backend = LocalBackend()
-        else:
-            self.backend = backend
-        
-        if environment is None:
-            self.environment = "dev"
-        else:
-            self.environment = environment
+        Args:
+           service :str: The name of the service to create
+           config :config: Optionally a dictionary of service names and settings
 
-        if network is None:
-            if rt == Runtime.KUBERNETES:
-                self.network = Network(mitm=False)
-            else:
-                self.network = Network(mitm=True)
+                <servicename>:
+                    environment:
+                        <ENVVAR>: <value>
+                        ...
+                    network:
+                        cacerts: <optional-root-ssl-certificate-bundle-file>
+                    backend:
+                        type: [local|aws|tiny]
+                        basedir: <base-directory-for-local>
+                        bucket: <bucket-name-for-aws>
 
-    @classmethod
-    def create(cls, config : str):
+        If not specified, environment defaults to the running unix environment variables.
+        Network defaults to the certifi certificate bundle.
+        Backend type must be specified.  For 'aws' the bucket must be specified.  For 'local' the basedir must be specified.   
+        """
+        if config is None:
+            with open(os.path.expanduser("~/.jaws"), "rt") as f:
+                config = yaml.load(f.read(), yaml.loader.SafeLoader)
+        config_group = config.get(service)
+        self.service = service
+        self.backend = create_backend(self, config_group.get("backend"))
+        self.network = create_network(self, config_group.get("network"))
+        self.environment = create_environment(self, config_group.get("environment"))
+
+    def object(self, key:str) -> Object:
+        return self.backend.object(key)
+    
+    def secret(self, name:str) -> Secret:
+        return self.backend.secret(name)
+
+    def __repr__(self):
+        return f"Context<{self.service}>({self.backend},{self.network},{self.environment})"
+
 
 

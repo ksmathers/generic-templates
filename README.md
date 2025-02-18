@@ -26,6 +26,27 @@ a string, just put string markers around it.
   fill_template("myapplication.py.template", env)
 ```
 
+```python
+  import jupyter_aws as jaws
+  ctx = jaws.Context()
+
+  # object store (AWS S3, local filesystem, tiny server)
+  value = "...some very important stuff..."
+  myobj = ctx.object("path/to/myobject")
+  myblob = ctx.object("path/to/myblob")
+  myobj.put_text(value)
+  myblob.put_bytes(value.encode('UTF-8'))
+  print(myobj.get_text())
+
+  # secrets (AWS SecretsManager, local keyring, tiny server)
+  mysec = ctx.secret(name)
+  secret_value = { "password": "foo", "expires": "2025-02-14", "whatever": "..." }
+  mysec.set(secret_value)
+```
+
+# Jupyter-AWS-Services
+
+
 # Fill-Template
 The *generic_template* library includes a command line tool for processing generic template files using a language
 that is similar in syntax to the C preprocessor.  The same functionality is also available in the library
