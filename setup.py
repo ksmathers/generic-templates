@@ -20,5 +20,8 @@ setuptools.setup(
     install_requires = [
        'keyring',
        'lark'
-    ]
+    ],
+    extras_require={
+        'nas': [ 'webdav4', 'paramiko']
+    }
 )

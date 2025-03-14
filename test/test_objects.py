@@ -11,6 +11,19 @@ def test_object_put_get():
                 "type": "local",
                 "basedir": "/tmp/jaws-%ENV%"
             }
+        },
+        "drivep": {
+            "environment": {
+                "SERVER": "drivep.ank.com",
+            },
+            "network": {
+                "verify-ssl": False
+            },
+            "backend": {
+                "type": "nas",
+                "server": "%SERVER%",
+                "webdav-port": 5006
+            }
         }
     }
     ctx = Context("default", config)

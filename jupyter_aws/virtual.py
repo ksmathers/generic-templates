@@ -5,45 +5,52 @@ from .common.environment import Environment
 import os
 
 
-def create_backend(ctx, backend : dict) -> Backend:
-    if backend is None:
+def create_backend(ctx, backend_config : dict) -> Backend:
+    if backend_config is None:
         rt = detect_runtime()
         if rt == Runtime.KUBERNETES:
-            backend = { "type": "aws", "creds": "auto" }
+            backend_config = { "type": "aws", "creds": "auto" }
         elif rt == Runtime.DOCKER:
-            backend = { "type": "tinyserver" }
-        elif rt == Runtime.MACOS or rt == Runtime.WINDOWS:
-            backend = { "type": "local", "basedir": "/tmp" }
+            backend_config = { "type": "tinyserver" }
+        elif rt == Runtime.MACOS:
+            backend_config = { "type": "local", "basedir": "/tmp" }
+        elif rt == Runtime.WINDOWS:
+            backend_config = { "type": "local", "basedir": r"C:\tmp" }
         else:
             raise NotImplementedError(f"Unable to create backend for {rt}")
-    
-    assert('type' in backend)
-    if backend['type'] == 'aws':
+
+    assert('type' in backend_config)
+    if backend_config['type'] == 'aws':
         from .backend.aws.aws_backend import AwsBackend
-        return AwsBackend(ctx, backend['creds'])
-    elif backend['type'] == 'tinyserver':
+        return AwsBackend(ctx, backend_config['creds'])
+    elif backend_config['type'] == 'tinyserver':
         from .backend.tiny.tiny_backend import TinyBackend
         return TinyBackend(ctx)
-    elif backend['type'] == 'local':
+    elif backend_config['type'] == 'local':
         from .backend.local.local_backend import LocalBackend
-        return LocalBackend(ctx, backend.get('basedir'))
+        return LocalBackend(ctx, backend_config.get('basedir'))
+    elif backend_config['type'] == 'nas':
+        from .backend.nas.nas_backend import NasBackend
+        return NasBackend(ctx, backend_config['server'], backend_config['port'], backend_config['secret'])
 
 
-def create_network(ctx, network : dict) -> Network:
-    if network is None:
+def create_network(ctx, network_config : dict) -> Network:
+    if network_config is None:
         import certifi
         rt = detect_runtime()
         if rt == Runtime.KUBERNETES:
-            network = { "cacerts": certifi.where() }
+            network_config = { "cacerts": certifi.where() }
         elif rt == Runtime.DOCKER:
-            network = { "cacerts": certifi.where() }
+            network_config = { "cacerts": certifi.where() }
         elif rt == Runtime.MACOS:
-            network = { "cacerts": "~/etc/CombinedCA.cer" }
+            network_config = { "cacerts": "~/etc/CombinedCA.cer" }
+        elif rt == Runtime.WINDOWS:
+            network_config = { "cacerts": certifi.where() }
         else:
             raise NotImplementedError(f"Unable to create network for {rt}")
-    return Network(ctx, network)
+    return Network(ctx, network_config)
 
-def create_environment(ctx, environment : dict) -> Environment:
-    if environment is None:
-        environment = os.environ
-    return Environment(ctx, environment)
+def create_environment(ctx, environment_config : dict) -> Environment:
+    if environment_config is None:
+        environment_config = os.environ
+    return Environment(ctx, environment_config)
