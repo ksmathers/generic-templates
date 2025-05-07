@@ -22,6 +22,7 @@ setuptools.setup(
        'lark'
     ],
     extras_require={
-        'nas': [ 'webdav4', 'paramiko']
+        'nas': [ 'webdav4', 'paramiko'],
+        'aws': [ 'boto3']
     }
 )

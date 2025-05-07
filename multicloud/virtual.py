@@ -21,6 +21,8 @@ def create_backend(ctx, backend_config : dict) -> Backend:
 
     assert('type' in backend_config)
     if backend_config['type'] == 'aws':
+        my_backend = __import__(f".backend.aws.{backend_config['type']}_backend")
+        my_backend.create_backend(ctx, backend_config)
         from .backend.aws.aws_backend import AwsBackend
         return AwsBackend(ctx, backend_config['creds'])
     elif backend_config['type'] == 'tinyserver':
@@ -32,6 +34,16 @@ def create_backend(ctx, backend_config : dict) -> Backend:
     elif backend_config['type'] == 'nas':
         from .backend.nas.nas_backend import NasBackend
         return NasBackend(ctx, backend_config['server'], backend_config['port'], backend_config['secret'])
+    else:
+        library_name = backend_config.get('library')
+        if library_name:
+            try:
+                external_library = __import__(library_name)
+                return external_library.create_backend(ctx, backend_config)
+            except ImportError:
+                raise ImportError(f"Unable to import library '{library_name}'")
+        else:
+            raise ValueError("Unsupported backend type and no library specified")
 
 
 def create_network(ctx, network_config : dict) -> Network:

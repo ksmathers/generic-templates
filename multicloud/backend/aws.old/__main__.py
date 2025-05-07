@@ -1,6 +1,6 @@
 #from jupyter_aws.arglist import Arglist
 from generic_templates.arglist import Arglist
-import jupyter_aws as jaws
+import multicloud as jaws
 import os
 
 def cmd_notify(_ctx: jaws.Context, args: Arglist):
@@ -73,7 +73,7 @@ def cmd_list(ctx: jaws.Context, args: Arglist):
 def cmd_upload(ctx : jaws.Context, args: Arglist):
     from_file = args.shift()
     to_arn = args.shift()
-    
+
     s3 = jaws.S3Client(ctx)
     with open(from_file, "rb") as fin:
         data = fin.read()
@@ -96,7 +96,7 @@ def cmd_s3find(ctx : jaws.Context, args: Arglist):
     print(result)
     return len(result)
 
-def usage(): 
+def usage():
     print("""
 Usage: python -m jupyter_aws [command] [arguments]
 
@@ -112,7 +112,7 @@ Where 'command' is one of the following:
 
  - dbdump <table-name> <s3arn>
     Exports the <table-name> from Redshift to a pipe delimited CSV file '<s3arn>.csv000'  If no <s3arn> is supplied then
-    the S3 arn will be 's3://arad-data-prd/redshift/oa-foundry-crosscheck/<table-shortname>.csv000' where 
+    the S3 arn will be 's3://arad-data-prd/redshift/oa-foundry-crosscheck/<table-shortname>.csv000' where
     <table-shortname> is the name of the table not including the database part.
 
  - list <table-name>

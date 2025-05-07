@@ -1,4 +1,4 @@
-from jupyter_aws.autocontext import Context
+from multicloud.autocontext import Context
 import random
 
 def test_secret():

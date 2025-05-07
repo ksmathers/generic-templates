@@ -1,5 +1,5 @@
-from jupyter_aws import Context
-from jupyter_aws.errors import ConfigurationError
+from multicloud import Context
+from multicloud.errors import ConfigurationError
 
 def test_object_put_get():
     config = {

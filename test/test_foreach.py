@@ -1,5 +1,5 @@
-from jupyter_aws.generic_templates import fill_template, Fpos
-from jupyter_aws import generic_templates 
+from multicloud.generic_templates import fill_template, Fpos
+from multicloud import generic_templates
 
 #generic_templates.template_parser.TRACE = True
 #generic_templates.template_tokenizer.TRACE = True
@@ -43,11 +43,11 @@ def func(
     ]
     for n in args:
         print(f"{n[0]:32s} {n[1]}")
-    
+
 """
     with open("/tmp/output-foreach-test.py", "rt") as f:
         actual_result = f.read()
     assert(actual_result == success_result)
-    
+
 if __name__ == "__main__":
     test_foreach()

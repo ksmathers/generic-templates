@@ -22,8 +22,11 @@ class Context:
                     network:
                         cacerts: <optional-root-ssl-certificate-bundle-file>
                     backend:
-                        type: [local|aws|tiny]
+                        type: [local|aws|tiny|nas]
                         basedir: <base-directory-for-local>
+                        server: <server-hostname-for-nas>
+                        port: <webdav-port>
+
                         bucket: <bucket-name-for-aws>
 
         If not specified, environment defaults to the running unix environment variables.

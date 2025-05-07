@@ -1,4 +1,4 @@
-from jupyter_aws.postgres_client import PostgresClient
+from multicloud.postgres_client import PostgresClient
 from urllib.parse import quote_plus
 from .context import Context
 from .secretsmanager_client import SecretsManagerClient
@@ -24,7 +24,7 @@ class RedshiftClient(PostgresClient):
     def cache_query(self, sql : str, path : str) -> str:
         """Caches a local copy of the specified query (but doesn't load the file)
 
-        Returns the path of the local parquet file, which will match the path supplied but with 
+        Returns the path of the local parquet file, which will match the path supplied but with
         the date added.
         """
         # Normalize the cache filename
@@ -37,14 +37,14 @@ class RedshiftClient(PostgresClient):
             assert(not 'ZULUTIME' in os.environ)
             fname = os.path.basename(path).replace(".parquet","")
             arn = self.unload_query(sql, f"s3://arad-poc/jaws/{fname}.", overwrite=True)
-            S3Client(self.ctx).download_arn(arn, path)   
+            S3Client(self.ctx).download_arn(arn, path)
         else:
             print("Using cached query:", path)
-        return path   
+        return path
 
     def cache_table(self, tblname : str, path : str) -> str:
         """Caches a local copy of the specified redshift table
-        """ 
+        """
         assert not path is None
         return self.cache_query(f"select * from {tblname}", path)
 
@@ -69,7 +69,7 @@ class RedshiftClient(PostgresClient):
 
     def execute_cache(self, sql, path):
         """
-        Equivalent to execute, but only executes if the cache file is missing or if 
+        Equivalent to execute, but only executes if the cache file is missing or if
         islive is True
         """
         # Fetch the file from the database if dblive is True or the file isn't cached
@@ -81,7 +81,7 @@ class RedshiftClient(PostgresClient):
             with open(path, "w+") as fout:
                 print(f"Run at {ZuluTime.now()}", file=fout)
         else:
-            print("Using cached non-query:", path)        
+            print("Using cached non-query:", path)
 
     def list_tables(self, schema):
         query = f"""
@@ -144,7 +144,7 @@ order by t.table_name;
 
         sql = f"""
             COPY {table} ({",".join(columns)})
-            FROM '{s3arn}' 
+            FROM '{s3arn}'
                 IAM_ROLE 'arn:aws:iam::925741509387:role/RedshiftArad'
                 FORMAT {format}
                 timeformat 'auto'
@@ -201,9 +201,9 @@ MAXFILESIZE AS 6.2 GB
 
     def unload_table_csv(self, tbl, s3key=None, s3bucket=None, delimiter="|", gzip=False, overwrite=True):
         """ unloads a Redshift table to S3
-        
+
         The output is sent to the s3bucket and s3key provided.
-        If s3key is an ARN then the ARN is used and s3bucket is ignored.  
+        If s3key is an ARN then the ARN is used and s3bucket is ignored.
         """
         #print("unloading", tbl)
         if s3key is None:
@@ -217,7 +217,7 @@ MAXFILESIZE AS 6.2 GB
         return self.unload_query_csv(f'SELECT * from {tbl}', s3key, s3bucket, delimiter, gzip, overwrite)
 
     def download_table_csv(self, tbl, dir=".", fname=None, delimiter="|", gzip=False) -> str:
-        """ Dumps a database table to a CSV file and returns the full path 
+        """ Dumps a database table to a CSV file and returns the full path
         where the file was saved
 
         Args:
@@ -236,11 +236,11 @@ MAXFILESIZE AS 6.2 GB
         path = f"{dir}/{fname}"
         if gzip and not path.endswith(".gz"):
             path += ".gz"
-        s3.download_arn(arn, path)        
+        s3.download_arn(arn, path)
         return path
 
     def download_table_parquet(self, tbl, dir=".", fname=None) -> str:
-        """ Dumps a database table to a CSV file and returns the full path 
+        """ Dumps a database table to a CSV file and returns the full path
         where the file was saved
 
         Args:

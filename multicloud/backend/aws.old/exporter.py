@@ -1,5 +1,5 @@
 from posixpath import basename
-import jupyter_aws as jaws
+import multicloud as jaws
 import os
 from datetime import date
 
@@ -22,7 +22,7 @@ class Exporter:
         self.format = format
         self.dryrun = dryrun
         self.dbc = dbc
-        
+
         self.now = jaws.ZuluTime()
 
         self.basedir = self.interpolate(exportdir, {'$extension': format})

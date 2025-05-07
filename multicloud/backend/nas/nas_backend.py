@@ -6,11 +6,11 @@ from ..object import Object
 from ...errors import ConfigurationError
 
 class NasBackend(Backend):
-    def __init__(self, ctx, server : str, port : int, creds_secret : str):
+    def __init__(self, ctx, server : str, port : int, webdav_secret : str):
         super().__init__(ctx, "LocalBackend")
         self.server = server
         self.port = port
-        self.creds_secret = creds_secret
+        self.webdav_secret = webdav_secret
 
     def secret(self, name) -> Secret:
         """Returns a secret by using ssh to store and retrieve files from the server"""
@@ -18,6 +18,6 @@ class NasBackend(Backend):
 
     def object(self, key) -> Object:
         """Store and retrieve objects over WebDAV"""
-        return NasObject(self.ctx, key, self.server, self.port, self.creds_secret)
+        return NasObject(self.ctx, key, self.server, self.port, self.webdav_secret)
 
 
