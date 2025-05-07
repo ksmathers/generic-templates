@@ -9,17 +9,20 @@ from .template_secrets import find_replace_variables
 from .error_report import ErrorReport
 
 
-def preprocess(fp : Fpos, environ : dict={}, args : List[str]=[]) -> PreprocessorVM:
+def preprocess(fp : Fpos, environ : dict={}, args : List[str]=[], errors : ErrorReport=None) -> PreprocessorVM:
     """- Runs the preprocessor on the input file 'fp' and returns the result as a string
     Args:
         fp :Fpos: The file to be read from
         environ :Dict[str, str]: The initial environment defines
     """
     # Generate preprocessor script from input and execute the script in a VM
-    vm = PreprocessorVM(environ, args)
+    if errors is None:
+        errors = ErrorReport()
+    vm = PreprocessorVM(environ, args, errors)
     prog = compile(fp)
     vm.prog(prog)
     vm.execute()
+    errors.exit_on_error()
     return vm
 
 def fix_module_names(fpath):
@@ -50,11 +53,25 @@ def warning(templatepath, savepath):
         cmt = "//"
     elif ext in [ "puml", "plantuml"]:
         cmt = "'"
-
+    elif ext in [ "ini", "conf" ]:
+        cmt = ";"
+    elif ext in [ "patch" ]:
+        cmt = "#"
+    else:
+        return None
     common_path = os.path.commonpath([templatepath, savepath])+"/"
-
     return warning.replace("#", cmt).replace("__FILE__", templatepath.replace(common_path,""))
 
+def fill_template_str(
+        template_str :str,
+        env : Dict[str,str],
+        *argv,
+        errors = None
+):
+    fp = Fpos.from_string(template_str)
+    vm = preprocess(fp, env, argv, errors)
+    body = "".join(vm.output)
+    return body
 
 def fill_template(
         template_file :str,
@@ -69,12 +86,12 @@ def fill_template(
     template_file :str: Path to the template file
     env :Dict[str,str]: Environment variables can be used in place of #define statements
     *argv :List[str]: Argument list
-    errors :ErrorReport:
+    errors :ErrorReport: Reports errors processing the template (default is to create a local error report)
     fp :Fpos: Optional open rewindable file input buffer with row and column position tracking
     Returns :str: The result of processing the template on success.  Throws an exception on error.
     """
     # read template
-    #print(f"reading {template_file}")
+    print(f"reading {template_file}")
 
     if input_dir:
         template_file = os.path.join(input_dir, template_file)
@@ -88,8 +105,8 @@ def fill_template(
         errors = ErrorReport()
 
     # process template
-    vm = preprocess(fp, env, argv)
-    body = find_replace_variables("".join(vm.output))
+    vm = preprocess(fp, env, argv, errors)
+    body = find_replace_variables("".join(vm.output), errors)
     errors.exit_on_error()
 
     # write output
@@ -115,7 +132,9 @@ def fill_template(
         print(f"writing {savepath}")
 
         with open(savepath, "wt") as f:
-            f.write(warning(template_file, savepath))
+            warning_txt =  warning(template_file, savepath)
+            if warning_txt:
+                f.write(warning_txt)
             f.write(body)
     else:
         print(body)

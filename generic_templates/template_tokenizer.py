@@ -10,6 +10,7 @@ class PreprocessorLexer(Lexer):
         ("INCLUDE", r"^#[ ]*include\b"),
         ("TEMPLATE", r"^#[ ]*template\b"),
         ("DEFINE", r"^#[ ]*define\b"),
+        ("UNDEF", r"^#[ ]*undef\b"),
         ("IFDEF", r"^#[ ]*ifdef\b"),
         ("IFNDEF", r"^#[ ]*ifndef\b"),
         ("IF", r"^#[ ]*if\b"),
@@ -39,6 +40,8 @@ class PreprocessorLexer(Lexer):
         ("LPAR", r"\("),
         ("RPAR", r"\)"),
         ("COMMA", r","),
+        ("LOGICAL_OR", r"\|\|"),
+        ("LOGICAL_AND", r"\&\&"),
         ("SYMBOL", r"[@A-Za-z_][@A-Za-z0-9_]*"),
         ("STRING", r'"(?:[^"\\]|\\.)*"'), # double-quoted string with escaped double quotes
         ("STRING", r"'(?:[^'\\]|\\.)*'"), # single-quoted strign with escaped single quotes

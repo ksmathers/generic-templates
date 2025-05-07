@@ -41,6 +41,9 @@ class Instruction:
     def GET(cls, symbol): # NOSONAR
         return Instruction('GET', symbol)
     @classmethod
+    def UNSET(cls, symbol): # NOSONAR
+        return Instruction('UNSET', symbol)
+    @classmethod
     def SET(cls, symbol): # NOSONAR
         return Instruction('SET', symbol)
     @classmethod

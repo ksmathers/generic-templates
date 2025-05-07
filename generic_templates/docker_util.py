@@ -5,7 +5,7 @@ class DockerRuntime(Enum):
     DOCKER = 1
     KUBERNETES = 2
     OTHER = 3
-
+    
 def detect_runtime():
     runtime = DockerRuntime.OTHER
     if os.path.exists("/.dockerenv"):

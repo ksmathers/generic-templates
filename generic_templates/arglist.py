@@ -17,6 +17,8 @@ class Arglist:
         """
         if len(args) == 1 and type(args[0]) is list:
             args = args[0]
+        elif type(args) is tuple:
+            args = list(args)
         if len(args) == 0: 
             self.program = sys.argv[0]
             args = copy(sys.argv[1:]) # skip executable 

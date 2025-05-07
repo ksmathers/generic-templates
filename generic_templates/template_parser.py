@@ -24,6 +24,7 @@ for: FOR arglist IN exprlist block ENDFOR -> foreach
 include: INCLUDE exprlist -> include
 
 define: DEFINE SYMBOL expr? -> setsymbol
+    | UNDEF SYMBOL -> delsymbol
     | TEMPLATE arglist -> template
 
 report: REPORT expr
@@ -46,6 +47,10 @@ condbody: IF bexpr block ENDIF -> condbody
 body: TEXT+
 
 bexpr: expr COMP expr -> expr2
+    | LPAR bexpr LOGICAL_OR bexpr -> expr2
+    | LPAR bexpr LOGICAL_AND bexpr -> expr2
+    | LPAR bexpr LOGICAL_OR bexpr RPAR -> expr3
+    | LPAR bexpr LOGICAL_AND bexpr RPAR -> expr3
     | UNARY bexpr -> expr1
     | DEFINED LPAR SYMBOL RPAR -> expr1
     | bliteral -> expr0
@@ -60,9 +65,10 @@ expr: SYMBOL -> eval1
     | INTERPOLATE LPAR expr RPAR -> fncall
     | INDICES LPAR expr RPAR -> fncall
 
-%declare TEXT IF IFDEF IFNDEF ELSE ENDIF INCLUDE DEFINE SYMBOL ASSIGN STRING
+%declare TEXT IF IFDEF IFNDEF ELSE ENDIF INCLUDE DEFINE UNDEF SYMBOL ASSIGN STRING
 %declare COMP UNARY DEFINED TRUE FALSE HALT TEMPLATE OUTFILE COMMA LPAR RPAR
 %declare BASENAME DIRNAME INTERPOLATE IN FOR ENDFOR INDICES REPORT
+%declare LOGICAL_OR LOGICAL_AND
 """
 
 # Utility functions
@@ -230,6 +236,14 @@ class ParsePreprocessor(Transformer):
         self.log("anyitem", v)
         return v[0]
 
+    def delsymbol(self, v):
+        self.log("delsymbol", v)
+        var = v[1].value
+        result = [
+            Instruction.UNSET(var)
+        ]
+        return result
+    
     def setsymbol(self, v):
         self.log("setsymbol", v)
         var = v[1].value
@@ -355,10 +369,21 @@ class ParsePreprocessor(Transformer):
         #print(f"node expr2 {result}", file=sys.stderr)
         return result
 
+    def expr3(self, v):
+        # a <=> b
+        self.log("expr3", v)
+        a = v[1]
+        cmp = v[2].value
+        b = v[3]
+        result = b + a + [ Instruction.EVAL2(cmp) ]
+        #print(f"node expr3 {result}", file=sys.stderr)
+        return result
 
 def compile(fp):
     # Generate preprocessor script from input and execute the script in a VM
-    parser = Lark(preprocessor_bnf, parser='lalr', lexer=PreprocessorLexer)
+    # 2024-12-30: switched from lalr to earley parser to handle shift/reduce ambiguities in bexpr's
+    #    containing && and || without parenthesized groups.
+    parser = Lark(preprocessor_bnf, parser='earley', lexer=PreprocessorLexer)
     try:
         tree = parser.parse(fp)
     except Exception as e:

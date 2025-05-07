@@ -4,13 +4,14 @@ from copy import copy
 from .arglist import Arglist
 
 from .template_instr import Instruction
+from .error_report import ErrorReport
 
 
 TRACE=False
 
 
 class PreprocessorVM:
-    def __init__(self, env=None, argv:Arglist=None):
+    def __init__(self, env=None, argv:Arglist=None, errors:ErrorReport=None):
         """ The preprocessor VM is a simple stack machine with no registers.  Instead all instructions
         run either the top of the stack or using one of the two arguments present in the instruction
         itself.  There is also indexed memory for storing and retrieving variables (self.vars).
@@ -20,6 +21,9 @@ class PreprocessorVM:
         """
         if env is None:
             env = {}
+        if errors is None:
+            errors = ErrorReport()
+        self.errors = errors
         self.stack = []
         self.vars = env
         self.progmem = [ Instruction.LABEL('main') ]
@@ -92,6 +96,7 @@ class PreprocessorVM:
             print(f"{pc:03d} {instr}")
             print("  v", self.vars)
             print("  s", self.stack)
+            print("  r", [ f"{k}:{v}" for k,v in self.r.items() if v is not None])
         opcode = instr.opcode
         arg1 = instr.arg1
         arg2 = instr.arg2
@@ -121,6 +126,10 @@ class PreprocessorVM:
                 v = (a > b)
             elif cond == '!=':
                 v = (a != b)
+            elif cond == '||':
+                v = (a | b)
+            elif cond == '&&':
+                v = (a & b)
             self.push(v)
         elif opcode == 'EVAL1':
             cond = arg1
@@ -138,6 +147,10 @@ class PreprocessorVM:
         elif opcode == 'JMP':
             lbl = arg1
             self.pc = self.labels[lbl]
+        elif opcode == 'UNSET':
+            var = arg1
+            if var in self.vars:
+                del self.vars[var]
         elif opcode == 'SET':
             var = arg1
             val = self.pop()
@@ -174,7 +187,7 @@ class PreprocessorVM:
             # run the preprocessor on the included template
             newvars = copy(self.vars)
             newvars['__FILE__'] = template_path
-            vm = preprocess(fp, newvars, argv)
+            vm = preprocess(fp, newvars, argv, self.errors)
 
             # add the output of the preprocessor to the current context
             for k,v in vm.vars.items():
@@ -220,7 +233,13 @@ class PreprocessorVM:
         elif opcode == 'GETIDX':
             arrreg = arg1
             idxreg = arg2
-            self.push(self.get_r(arrreg)[self.get_r(idxreg)])
+
+            arr = self.get_r(arrreg)
+            assert(type(arr) is list)
+            idx = self.get_r(idxreg)
+            assert(type(idx) is int)
+
+            self.push(arr[idx])
 
     def execute(self):
         """ Executes the preprocessor program that was built from parsing a template file
@@ -230,6 +249,7 @@ class PreprocessorVM:
         while (self.running):
             try:
                 self.execute1()
-            except Exception as e:
-                print(self.pc, str(e))
-                raise e
+            except Exception as ae:
+                print(ae)
+                #self.errors.error(f"[{self.pc}] Runtime Error: {str(ae)}")
+                raise

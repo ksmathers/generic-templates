@@ -1,4 +1,5 @@
 import re
+import os
 try:
     from multicloud.secret import Secret
 except:
@@ -19,7 +20,7 @@ def replace_variable(body, span, varvalue):
     #print(body)
     return body
 
-def get_secret(varname : str) -> str:
+def get_secret(varname : str, errors : ErrorReport) -> str:
     """- Fetches a secret by name
     Args:
         varname :str: The name of the secret to fetch the value of
@@ -67,7 +68,7 @@ def get_setting(varname : str) -> str:
     return settings[varname]
 
 
-def find_replace_variables(body : str) -> str:
+def find_replace_variables(body : str, errors : ErrorReport) -> str:
     """- Interpolates variables in the body of a document
 
     Variables have the form '@<type>:<varname>[.<property>]@'.  The supported
@@ -91,7 +92,7 @@ def find_replace_variables(body : str) -> str:
             #print(f"find_replace_variables: {vartype} {varname}")
             if vartype == "secret":
                 varname, varprop = varname.split(".")
-                varvalue = get_secret(varname)[varprop]
+                varvalue = get_secret(varname, errors)[varprop]
             elif vartype == "env":
                 varvalue = os.environ.get(varname)
                 if varvalue is None:
